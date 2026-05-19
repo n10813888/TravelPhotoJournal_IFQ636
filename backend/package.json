@@ -24,6 +24,7 @@
   "devDependencies": {
     "esm": "^3.2.25",
     "mocha": "^11.0.1",
+    "mongodb-memory-server": "^11.1.0",
     "nodemon": "^2.0.15",
     "sinon": "^19.0.2"
   },

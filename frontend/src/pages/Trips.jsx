@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import TripCard from '../components/TripCard';
 
 const Trips = () => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [trips, setTrips] = useState(null);
   const [error, setError] = useState('');
 
@@ -17,12 +17,7 @@ const Trips = () => {
         const response = await axiosInstance.get('/api/trips', {
           headers: { Authorization: `Bearer ${user.token}` },
         });
-        if (cancelled) return;
-        if (!response.data || response.data.length === 0) {
-          navigate('/trips/new', { replace: true });
-          return;
-        }
-        setTrips(response.data);
+        if (!cancelled) setTrips(response.data || []);
       } catch (err) {
         if (!cancelled) {
           setError(err.response?.data?.message || 'Failed to load trips.');
@@ -32,7 +27,7 @@ const Trips = () => {
     return () => {
       cancelled = true;
     };
-  }, [user, navigate]);
+  }, [user]);
 
   if (!user) {
     return (
@@ -58,8 +53,25 @@ const Trips = () => {
     );
   }
 
+  if (trips.length === 0) {
+    return (
+      <div className="max-w-2xl mx-auto mt-16 p-6 text-center">
+        <h1 className="text-2xl font-bold mb-2">No trips yet</h1>
+        <p className="text-gray-600 mb-6">
+          Start your travel journal by creating your first trip.
+        </p>
+        <Link
+          to="/trips/new"
+          className="inline-block bg-blue-600 text-white px-5 py-2 rounded"
+        >
+          Create your first trip
+        </Link>
+      </div>
+    );
+  }
+
   return (
-    <div className="max-w-3xl mx-auto mt-10 p-6">
+    <div className="max-w-5xl mx-auto mt-10 p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">My Trips</h1>
         <Link
@@ -69,19 +81,11 @@ const Trips = () => {
           New Trip
         </Link>
       </div>
-      <ul className="space-y-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {trips.map((trip) => (
-          <li key={trip._id} className="bg-white p-4 shadow rounded">
-            <Link
-              to={`/trips/${trip._id}`}
-              className="text-lg font-semibold text-blue-700"
-            >
-              {trip.title}
-            </Link>
-            <p className="text-gray-600">{trip.destination}</p>
-          </li>
+          <TripCard key={trip._id} trip={trip} />
         ))}
-      </ul>
+      </div>
     </div>
   );
 };
