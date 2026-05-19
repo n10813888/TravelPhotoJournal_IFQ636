@@ -6,6 +6,7 @@ import Profile from './pages/Profile';
 import NewTrip from './pages/NewTrip';
 import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
+import EditTrip from './pages/EditTrip';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/trips" element={<Trips />} />
         <Route path="/trips/new" element={<NewTrip />} />
         <Route path="/trips/:id" element={<TripDetail />} />
+        <Route path="/trips/:id/edit" element={<EditTrip />} />
       </Routes>
     </Router>
   );

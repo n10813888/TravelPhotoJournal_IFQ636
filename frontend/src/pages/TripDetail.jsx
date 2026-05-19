@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance, { apiBase } from '../axiosConfig';
+import ConfirmDialog from '../components/ConfirmDialog';
 
 const formatDate = (iso) => {
   if (!iso) return null;
@@ -15,8 +16,13 @@ const formatDate = (iso) => {
 const TripDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [trip, setTrip] = useState(null);
   const [error, setError] = useState('');
+  const [flash, setFlash] = useState(location.state?.flash || '');
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -40,6 +46,27 @@ const TripDetail = () => {
       cancelled = true;
     };
   }, [user, id]);
+
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(''), 4000);
+    return () => clearTimeout(t);
+  }, [flash]);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await axiosInstance.delete(`/api/trips/${id}`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      navigate('/trips', { state: { flash: 'Trip deleted.' } });
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete trip.');
+      setConfirmOpen(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   if (!user) {
     return (
@@ -78,6 +105,15 @@ const TripDetail = () => {
       <Link to="/trips" className="text-blue-600 inline-block mb-4">
         ← Back to trips
       </Link>
+
+      {flash && (
+        <div
+          role="status"
+          className="mb-4 bg-green-100 text-green-800 px-4 py-2 rounded"
+        >
+          {flash}
+        </div>
+      )}
 
       {trip.coverPhoto && (
         <img
@@ -129,7 +165,7 @@ const TripDetail = () => {
               </Link>
               <button
                 type="button"
-                onClick={() => alert('Delete coming in the next story.')}
+                onClick={() => setConfirmOpen(true)}
                 className="block w-full bg-red-600 text-white px-4 py-2 rounded"
               >
                 Delete Trip
@@ -138,6 +174,16 @@ const TripDetail = () => {
           </aside>
         )}
       </div>
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete trip?"
+        message="This will permanently delete the trip and all its journal entries."
+        confirmLabel="Delete"
+        busy={deleting}
+        onConfirm={handleDelete}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </div>
   );
 };

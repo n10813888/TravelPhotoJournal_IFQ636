@@ -1,13 +1,21 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import TripCard from '../components/TripCard';
 
 const Trips = () => {
   const { user } = useAuth();
+  const location = useLocation();
   const [trips, setTrips] = useState(null);
   const [error, setError] = useState('');
+  const [flash, setFlash] = useState(location.state?.flash || '');
+
+  useEffect(() => {
+    if (!flash) return;
+    const t = setTimeout(() => setFlash(''), 4000);
+    return () => clearTimeout(t);
+  }, [flash]);
 
   useEffect(() => {
     if (!user) return;
@@ -72,6 +80,14 @@ const Trips = () => {
 
   return (
     <div className="max-w-5xl mx-auto mt-10 p-6">
+      {flash && (
+        <div
+          role="status"
+          className="mb-4 bg-green-100 text-green-800 px-4 py-2 rounded"
+        >
+          {flash}
+        </div>
+      )}
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">My Trips</h1>
         <Link

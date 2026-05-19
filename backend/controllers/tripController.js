@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const Trip = require('../models/Trip');
+const Entry = require('../models/Entry');
 const { publicUrlFor, removePhoto } = require('../services/photoStorage');
 
 const parseIsPublic = (raw) => {
@@ -76,4 +77,74 @@ const getTripById = async (req, res) => {
   }
 };
 
-module.exports = { createTrip, getMyTrips, getTripById };
+const findOwnedTrip = async (id, userId) => {
+  if (!mongoose.Types.ObjectId.isValid(id)) return null;
+  const trip = await Trip.findById(id);
+  if (!trip) return null;
+  if (String(trip.userId) !== String(userId)) return null;
+  return trip;
+};
+
+const updateTrip = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const trip = await findOwnedTrip(id, req.user.id);
+    if (!trip) {
+      if (req.file) removePhoto(req.file.filename);
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    const { title, destination, startDate, endDate, description, isPublic } = req.body;
+
+    const nextStart = startDate ? new Date(startDate) : trip.startDate;
+    const nextEnd =
+      endDate === '' ? null : endDate ? new Date(endDate) : trip.endDate;
+
+    if (nextEnd && nextStart && nextEnd < nextStart) {
+      if (req.file) removePhoto(req.file.filename);
+      return res
+        .status(400)
+        .json({ message: 'End date must be on or after start date' });
+    }
+
+    if (title !== undefined) trip.title = title;
+    if (destination !== undefined) trip.destination = destination;
+    if (startDate !== undefined) trip.startDate = nextStart;
+    if (endDate !== undefined) trip.endDate = nextEnd || undefined;
+    if (description !== undefined) trip.description = description;
+    if (isPublic !== undefined) trip.isPublic = parseIsPublic(isPublic);
+
+    if (req.file) {
+      const oldPhoto = trip.coverPhoto;
+      trip.coverPhoto = publicUrlFor(req.file.filename);
+      if (oldPhoto) removePhoto(oldPhoto);
+    }
+
+    const updated = await trip.save();
+    res.json(updated);
+  } catch (error) {
+    if (req.file) removePhoto(req.file.filename);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteTrip = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const trip = await findOwnedTrip(id, req.user.id);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    await Entry.deleteMany({ tripId: trip._id });
+    if (trip.coverPhoto) removePhoto(trip.coverPhoto);
+    await trip.deleteOne();
+
+    res.json({ message: 'Trip deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createTrip, getMyTrips, getTripById, updateTrip, deleteTrip };
