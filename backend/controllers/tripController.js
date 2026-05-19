@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const Trip = require('../models/Trip');
 const { publicUrlFor, removePhoto } = require('../services/photoStorage');
 
@@ -54,4 +55,25 @@ const getMyTrips = async (req, res) => {
   }
 };
 
-module.exports = { createTrip, getMyTrips };
+const getTripById = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Trip not found' });
+  }
+
+  try {
+    const trip = await Trip.findById(id);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const isOwner = req.user && String(trip.userId) === String(req.user.id);
+    if (!isOwner && !trip.isPublic) {
+      return res.status(404).json({ message: 'Trip not found' });
+    }
+
+    res.json(trip);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createTrip, getMyTrips, getTripById };

@@ -90,3 +90,108 @@ describe('GET /api/trips (integration)', () => {
     expect(res.body).to.deep.equal([]);
   });
 });
+
+describe('GET /api/trips/:id (integration)', () => {
+  before(async () => {
+    await connect();
+  });
+
+  after(async () => {
+    await disconnect();
+  });
+
+  beforeEach(async () => {
+    await clearDb();
+  });
+
+  const seed = async () => {
+    const owner = await User.create({
+      name: 'Owner',
+      email: 'owner@test.com',
+      password: 'pass1234',
+    });
+    const stranger = await User.create({
+      name: 'Stranger',
+      email: 'stranger@test.com',
+      password: 'pass1234',
+    });
+    const privateTrip = await Trip.create({
+      userId: owner._id,
+      title: 'Private',
+      destination: 'Paris',
+      startDate: new Date('2026-06-01'),
+      isPublic: false,
+    });
+    const publicTrip = await Trip.create({
+      userId: owner._id,
+      title: 'Public',
+      destination: 'Tokyo',
+      startDate: new Date('2026-07-01'),
+      isPublic: true,
+    });
+    return { owner, stranger, privateTrip, publicTrip };
+  };
+
+  it('returns 401 when no token is provided', async () => {
+    const { privateTrip } = await seed();
+    const res = await chai.request(app).get(`/api/trips/${privateTrip._id}`);
+    expect(res).to.have.status(401);
+  });
+
+  it('returns the trip for the owner (private)', async () => {
+    const { owner, privateTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${privateTrip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
+    expect(res).to.have.status(200);
+    expect(res.body.title).to.equal('Private');
+  });
+
+  it('returns the trip for the owner (public)', async () => {
+    const { owner, publicTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${publicTrip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
+    expect(res).to.have.status(200);
+    expect(res.body.title).to.equal('Public');
+  });
+
+  it('returns the public trip to a non-owner', async () => {
+    const { stranger, publicTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${publicTrip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(stranger._id)}`);
+    expect(res).to.have.status(200);
+    expect(res.body.title).to.equal('Public');
+  });
+
+  it('returns 404 to a non-owner for a private trip', async () => {
+    const { stranger, privateTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${privateTrip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(stranger._id)}`);
+    expect(res).to.have.status(404);
+  });
+
+  it('returns 404 for a non-existent trip id', async () => {
+    const { owner } = await seed();
+    const res = await chai
+      .request(app)
+      .get('/api/trips/507f1f77bcf86cd799439099')
+      .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
+    expect(res).to.have.status(404);
+  });
+
+  it('returns 404 for an invalid trip id', async () => {
+    const { owner } = await seed();
+    const res = await chai
+      .request(app)
+      .get('/api/trips/not-an-id')
+      .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
+    expect(res).to.have.status(404);
+  });
+});

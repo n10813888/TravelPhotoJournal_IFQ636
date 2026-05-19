@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { apiBase } from '../axiosConfig';
 
 const formatDate = (iso) => {
   if (!iso) return null;
@@ -15,8 +16,6 @@ const dateRange = (start, end) => {
   if (s && e) return `${s} – ${e}`;
   return s || '';
 };
-
-const apiBase = 'http://localhost:5001';
 
 const TripCard = ({ trip }) => (
   <Link
