@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const Trip = require('../models/Trip');
-const { createTrip } = require('../controllers/tripController');
+const { createTrip, getMyTrips } = require('../controllers/tripController');
 
 const { expect } = chai;
 
@@ -109,6 +109,34 @@ describe('Trip controller - createTrip', () => {
     const req = baseReq();
     const res = makeRes();
     await createTrip(req, res);
+    expect(res.status.calledWith(500)).to.equal(true);
+  });
+});
+
+describe('Trip controller - getMyTrips', () => {
+  afterEach(() => sinon.restore());
+
+  it('returns trips for the current user sorted by startDate desc', async () => {
+    const trips = [{ _id: 't1' }, { _id: 't2' }];
+    const sort = sinon.stub().resolves(trips);
+    const find = sinon.stub(Trip, 'find').returns({ sort });
+
+    const req = { user: { id: 'user1' } };
+    const res = makeRes();
+    await getMyTrips(req, res);
+
+    expect(find.calledWith({ userId: 'user1' })).to.equal(true);
+    expect(sort.calledWith({ startDate: -1 })).to.equal(true);
+    expect(res.json.calledWith(trips)).to.equal(true);
+  });
+
+  it('returns 500 when Trip.find throws', async () => {
+    const sort = sinon.stub().rejects(new Error('db down'));
+    sinon.stub(Trip, 'find').returns({ sort });
+
+    const req = { user: { id: 'user1' } };
+    const res = makeRes();
+    await getMyTrips(req, res);
     expect(res.status.calledWith(500)).to.equal(true);
   });
 });

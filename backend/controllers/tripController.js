@@ -45,4 +45,13 @@ const createTrip = async (req, res) => {
   }
 };
 
-module.exports = { createTrip };
+const getMyTrips = async (req, res) => {
+  try {
+    const trips = await Trip.find({ userId: req.user.id }).sort({ startDate: -1 });
+    res.json(trips);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = { createTrip, getMyTrips };
