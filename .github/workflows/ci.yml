@@ -21,7 +21,7 @@ jobs:
       - name: Print Env Secret
         run: echo "${{ secrets.PROD }}" > ./backend/.env
 
-      - name: Run pm2 stop all
+      - name: Stop PM2 processes
         run: pm2 stop all || true
 
       - name: Install Backend Dependencies
@@ -36,8 +36,11 @@ jobs:
         working-directory: ./backend
         run: yarn test || npm test
 
-      - name: Run pm2 start all
-        run: pm2 start all
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          sudo rm -rf build/
+          yarn run build
 
-      - name: Run pm2 restart all
+      - name: Restart PM2 processes
         run: pm2 restart all
