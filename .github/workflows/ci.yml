@@ -1,28 +1,43 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
     push:
-        branches:
-            - main
-    pull_request:
-        branches:
-            - main
+        branches: [main]
 
 jobs:
-    build:
+    build-and-deploy:
         runs-on: ubuntu-latest
+        environment: production
 
         steps:
-        - name: Checkout code
-            uses: actions/checkout@v2
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-        - name: Set up Node.js
-            uses: actions/setup-node@v2
-            with:
-                node-version: '14'
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                node-version: '20'
 
-        - name: Install dependencies
-            run: npm install
+            - name: Install dependencies
+              run: npm i
+              working-directory: ./backend
 
-        - name: Run tests
-            run: npm test
+            - name: Run tests
+              run: npm test
+              working-directory: ./backend
+
+            - name: Deploy to EC2
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                host: ${{ secrets.EC2_HOST }} //EC2 public IP
+                username: ${{ secrets.EC2_USER }} // ubuntu
+                key: ${{ secrets.EC2_SSH_KEY }} // contents of .pem file
+                script: |
+                  cd ~/app
+                  git pull origin main
+                  cd backend
+                  npm install
+                  pm2 restart all
+                  pm2 status
+
+
