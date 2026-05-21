@@ -1,70 +1,78 @@
-# Getting Started with Create React App
+# Travel Photo Journal
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web app for travellers to capture and document their experiences with trips and journal entries. Users can create trips, write journal entries, and attach photos to those entries. Public trips are visible to other users via a shared feed.
 
-## Available Scripts
+## Live Demo
 
-In the project directory, you can run:
+**Public URL:** http://16.176.192.94
 
-### `npm start`
+### Test Credentials
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+Use these to log in and explore the dashboard:
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- **Username:** `jrmilburn@outlook.com`
+- **Password:** `Diniwho1!`
 
-### `npm test`
+## Tech Stack
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- **Frontend:** React, Tailwind CSS
+- **Backend:** Node.js, Express
+- **Database:** MongoDB (Atlas)
+- **File uploads:** Multer
+- **Authentication:** JWT
+- **Process manager:** PM2
+- **Web server / reverse proxy:** Nginx
+- **CI/CD:** GitHub Actions (self-hosted runner on AWS EC2)
 
-### `npm run build`
+## Features
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+- User registration and login
+- Create, view, and manage personal trips
+- Add journal entries to each trip
+- Upload photos to journal entries
+- Browse a public feed of trips shared by other users
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Project Setup (Local Development)
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Prerequisites
 
-### `npm run eject`
+- Node.js v22
+- Yarn
+- MongoDB connection string
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+### Backend
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+cd backend
+yarn install
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+Create a `.env` file in the `backend/` folder:
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+```
+MONGO_URI=<your MongoDB connection string>
+JWT_SECRET=<any long random string>
+PORT=5001
+```
 
-## Learn More
+Start the backend:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+yarn start
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The backend will run on `http://localhost:5001`.
 
-### Code Splitting
+### Frontend
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+```bash
+cd frontend
+yarn install
+yarn start
+```
 
-### Analyzing the Bundle Size
+The frontend will run on `http://localhost:3000` and connect to the local backend by default.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+## Deployment
 
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The app is deployed to AWS EC2 using GitHub Actions with a self-hosted runner. On every push to `main`, the workflow installs dependencies, runs backend tests, rebuilds the frontend, and restarts the app via PM2. Nginx handles incoming traffic on port 80 and proxies requests to the frontend.
