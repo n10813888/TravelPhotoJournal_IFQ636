@@ -28,7 +28,7 @@ const AdminDashboard = () => {
   }, [user]);
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 p-6">
+    <>
       <h1 className="text-2xl font-bold mb-6">Overview</h1>
 
       {error && <p className="text-red-600 mb-4">{error}</p>}
@@ -39,7 +39,7 @@ const AdminDashboard = () => {
         <StatTile label="Journal entries" value={stats?.entries} />
         <StatTile label="Public trips" value={stats?.publicTrips} />
       </div>
-    </div>
+    </>
   );
 };
 

@@ -11,6 +11,8 @@ import NewEntry from './pages/NewEntry';
 import EditEntry from './pages/EditEntry';
 import PublicFeed from './pages/PublicFeed';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminUsers from './pages/AdminUsers';
+import AdminLayout from './components/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 
 function App() {
@@ -23,7 +25,19 @@ function App() {
           path="/admin"
           element={
             <AdminRoute>
-              <AdminDashboard />
+              <AdminLayout>
+                <AdminDashboard />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminUsers />
+              </AdminLayout>
             </AdminRoute>
           }
         />
