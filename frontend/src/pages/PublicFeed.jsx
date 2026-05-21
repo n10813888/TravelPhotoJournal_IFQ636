@@ -108,7 +108,7 @@ const PublicFeed = () => {
 
   return (
     <div className="max-w-xl mx-auto mt-6 px-4 sm:px-0 space-y-6">
-      {trips.map((trip) => (
+      {trips?.map((trip) => (
         <FeedCard key={trip._id} trip={trip} />
       ))}
     </div>
