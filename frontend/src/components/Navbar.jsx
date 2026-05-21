@@ -37,6 +37,9 @@ const Navbar = () => {
         <span>Travel Photo Journal</span>
       </Link>
       <div className="flex items-center gap-4">
+        <Link to="/feed" className="text-gray-700 hover:text-black">
+          Public Feed
+        </Link>
         {user ? (
           <>
             <Link to="/trips" className="text-gray-700 hover:text-black">

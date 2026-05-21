@@ -39,6 +39,9 @@ const TripCard = ({ trip }) => (
       <p className="text-sm text-gray-500 mt-1">
         📅 {dateRange(trip.startDate, trip.endDate)}
       </p>
+      {trip.ownerName && (
+        <p className="text-sm text-gray-500 mt-1">by {trip.ownerName}</p>
+      )}
     </div>
   </Link>
 );

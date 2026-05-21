@@ -133,10 +133,18 @@ describe('GET /api/trips/:id (integration)', () => {
     return { owner, stranger, privateTrip, publicTrip };
   };
 
-  it('returns 401 when no token is provided', async () => {
+  it('returns 404 to anonymous callers for a private trip', async () => {
     const { privateTrip } = await seed();
     const res = await chai.request(app).get(`/api/trips/${privateTrip._id}`);
-    expect(res).to.have.status(401);
+    expect(res).to.have.status(404);
+  });
+
+  it('returns the trip to anonymous callers if it is public', async () => {
+    const { publicTrip } = await seed();
+    const res = await chai.request(app).get(`/api/trips/${publicTrip._id}`);
+    expect(res).to.have.status(200);
+    expect(res.body.title).to.equal('Public');
+    expect(res.body.ownerName).to.equal('Owner');
   });
 
   it('returns the trip for the owner (private)', async () => {
@@ -194,6 +202,73 @@ describe('GET /api/trips/:id (integration)', () => {
       .get('/api/trips/not-an-id')
       .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
     expect(res).to.have.status(404);
+  });
+});
+
+describe('GET /api/trips/public (integration)', () => {
+  before(async () => {
+    await connect();
+  });
+  after(async () => {
+    await disconnect();
+  });
+  beforeEach(async () => {
+    await clearDb();
+  });
+
+  it('returns only public trips, sorted by createdAt desc, with owner name', async () => {
+    const owner = await User.create({
+      name: 'Jane Doe',
+      email: 'jane@test.com',
+      password: 'pass1234',
+    });
+
+    const older = await Trip.create({
+      userId: owner._id,
+      title: 'Older Public',
+      destination: 'Paris',
+      startDate: new Date('2026-01-01'),
+      isPublic: true,
+    });
+    // Force createdAt ordering
+    await Trip.updateOne(
+      { _id: older._id },
+      { $set: { createdAt: new Date('2026-01-01') } }
+    );
+
+    await Trip.create({
+      userId: owner._id,
+      title: 'Newer Public',
+      destination: 'Tokyo',
+      startDate: new Date('2026-06-01'),
+      isPublic: true,
+    });
+    await Trip.create({
+      userId: owner._id,
+      title: 'Private',
+      destination: 'Rome',
+      startDate: new Date('2026-07-01'),
+      isPublic: false,
+    });
+
+    const res = await chai.request(app).get('/api/trips/public');
+    expect(res).to.have.status(200);
+    expect(res.body).to.have.length(2);
+    expect(res.body[0].title).to.equal('Newer Public');
+    expect(res.body[1].title).to.equal('Older Public');
+    expect(res.body.map((t) => t.title)).to.not.include('Private');
+    expect(res.body[0].ownerName).to.equal('Jane Doe');
+  });
+
+  it('returns an empty array when there are no public trips', async () => {
+    const res = await chai.request(app).get('/api/trips/public');
+    expect(res).to.have.status(200);
+    expect(res.body).to.deep.equal([]);
+  });
+
+  it('does not require authentication', async () => {
+    const res = await chai.request(app).get('/api/trips/public');
+    expect(res).to.have.status(200);
   });
 });
 

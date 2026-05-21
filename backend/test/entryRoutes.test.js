@@ -209,6 +209,23 @@ describe('GET /api/trips/:tripId/entries (integration)', () => {
       .set('Authorization', `Bearer ${tokenFor(stranger._id)}`);
     expect(res).to.have.status(404);
   });
+
+  it('returns entries for a public trip to an anonymous caller', async () => {
+    const { publicTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${publicTrip._id}/entries`);
+    expect(res).to.have.status(200);
+    expect(res.body).to.have.length(1);
+  });
+
+  it('returns 404 for a private trip to an anonymous caller', async () => {
+    const { privateTrip } = await seed();
+    const res = await chai
+      .request(app)
+      .get(`/api/trips/${privateTrip._id}/entries`);
+    expect(res).to.have.status(404);
+  });
 });
 
 describe('PUT /api/trips/:tripId/entries/:entryId (integration)', () => {

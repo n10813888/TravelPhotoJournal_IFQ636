@@ -9,12 +9,14 @@ import Trips from './pages/Trips';
 import EditTrip from './pages/EditTrip';
 import NewEntry from './pages/NewEntry';
 import EditEntry from './pages/EditEntry';
+import PublicFeed from './pages/PublicFeed';
 
 function App() {
   return (
     <Router>
       <Navbar />
       <Routes>
+        <Route path="/feed" element={<PublicFeed />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />

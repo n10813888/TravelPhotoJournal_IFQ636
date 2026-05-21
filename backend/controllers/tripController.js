@@ -3,6 +3,15 @@ const Trip = require('../models/Trip');
 const Entry = require('../models/Entry');
 const { publicUrlFor, removePhoto } = require('../services/photoStorage');
 
+const formatTripWithOwner = (tripDoc) => {
+  const obj = tripDoc.toObject ? tripDoc.toObject() : tripDoc;
+  if (obj.userId && typeof obj.userId === 'object' && obj.userId._id) {
+    obj.ownerName = obj.userId.name;
+    obj.userId = obj.userId._id;
+  }
+  return obj;
+};
+
 const parseIsPublic = (raw) => {
   if (raw === undefined || raw === null || raw === '') return false;
   if (typeof raw === 'boolean') return raw;
@@ -63,15 +72,27 @@ const getTripById = async (req, res) => {
   }
 
   try {
-    const trip = await Trip.findById(id);
+    const trip = await Trip.findById(id).populate('userId', 'name');
     if (!trip) return res.status(404).json({ message: 'Trip not found' });
 
-    const isOwner = req.user && String(trip.userId) === String(req.user.id);
+    const ownerId = trip.userId._id || trip.userId;
+    const isOwner = req.user && String(ownerId) === String(req.user.id);
     if (!isOwner && !trip.isPublic) {
       return res.status(404).json({ message: 'Trip not found' });
     }
 
-    res.json(trip);
+    res.json(formatTripWithOwner(trip));
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const getPublicFeed = async (_req, res) => {
+  try {
+    const trips = await Trip.find({ isPublic: true })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name');
+    res.json(trips.map(formatTripWithOwner));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -147,4 +168,11 @@ const deleteTrip = async (req, res) => {
   }
 };
 
-module.exports = { createTrip, getMyTrips, getTripById, updateTrip, deleteTrip };
+module.exports = {
+  createTrip,
+  getMyTrips,
+  getTripById,
+  updateTrip,
+  deleteTrip,
+  getPublicFeed,
+};

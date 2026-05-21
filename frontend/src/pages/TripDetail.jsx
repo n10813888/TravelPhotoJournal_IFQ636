@@ -29,17 +29,13 @@ const TripDetail = () => {
   const [deletingEntry, setDeletingEntry] = useState(false);
 
   useEffect(() => {
-    if (!user) return;
     let cancelled = false;
+    const headers = user ? { Authorization: `Bearer ${user.token}` } : {};
     (async () => {
       try {
         const [tripRes, entriesRes] = await Promise.all([
-          axiosInstance.get(`/api/trips/${id}`, {
-            headers: { Authorization: `Bearer ${user.token}` },
-          }),
-          axiosInstance.get(`/api/trips/${id}/entries`, {
-            headers: { Authorization: `Bearer ${user.token}` },
-          }),
+          axiosInstance.get(`/api/trips/${id}`, { headers }),
+          axiosInstance.get(`/api/trips/${id}/entries`, { headers }),
         ]);
         if (cancelled) return;
         setTrip(tripRes.data);
@@ -97,20 +93,15 @@ const TripDetail = () => {
     }
   };
 
-  if (!user) {
-    return (
-      <div className="max-w-2xl mx-auto mt-10 p-6">
-        <p className="text-red-600">You must be logged in to view this trip.</p>
-      </div>
-    );
-  }
+  const backLink = user ? '/trips' : '/feed';
+  const backLabel = user ? '← Back to trips' : '← Back to feed';
 
   if (error) {
     return (
       <div className="max-w-2xl mx-auto mt-10 p-6">
         <p className="text-red-600">{error}</p>
-        <Link to="/trips" className="text-black underline mt-4 inline-block">
-          ← Back to trips
+        <Link to={backLink} className="text-black underline mt-4 inline-block">
+          {backLabel}
         </Link>
       </div>
     );
@@ -124,15 +115,16 @@ const TripDetail = () => {
     );
   }
 
-  const isOwner = user.id === trip.userId || user._id === trip.userId;
+  const isOwner =
+    !!user && (user.id === trip.userId || user._id === trip.userId);
   const dateRange = [formatDate(trip.startDate), formatDate(trip.endDate)]
     .filter(Boolean)
     .join(' – ');
 
   return (
     <div className="max-w-5xl mx-auto mt-6 p-4 sm:p-6">
-      <Link to="/trips" className="text-gray-700 hover:text-black inline-block mb-4">
-        ← Back to trips
+      <Link to={backLink} className="text-gray-700 hover:text-black inline-block mb-4">
+        {backLabel}
       </Link>
 
       {flash && (
@@ -159,6 +151,9 @@ const TripDetail = () => {
               <h1 className="text-3xl font-bold">{trip.title}</h1>
               <p className="text-gray-700">{trip.destination}</p>
               <p className="text-gray-500 text-sm mt-1">{dateRange}</p>
+              {trip.ownerName && (
+                <p className="text-gray-500 text-sm mt-1">by {trip.ownerName}</p>
+              )}
             </div>
             <span
               className={`inline-block px-3 py-1 text-sm rounded-full ${
