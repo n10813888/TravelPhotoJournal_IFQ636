@@ -325,11 +325,13 @@ describe('DELETE /api/trips/:id (integration)', () => {
       tripId: trip._id,
       userId: owner._id,
       caption: 'one',
+      photos: ['/uploads/a.jpg'],
     });
     await Entry.create({
       tripId: trip._id,
       userId: owner._id,
       caption: 'two',
+      photos: ['/uploads/b.jpg'],
     });
     return { owner, stranger, trip };
   };

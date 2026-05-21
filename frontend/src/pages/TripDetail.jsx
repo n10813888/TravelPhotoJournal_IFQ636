@@ -19,6 +19,7 @@ const TripDetail = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [trip, setTrip] = useState(null);
+  const [entries, setEntries] = useState([]);
   const [error, setError] = useState('');
   const [flash, setFlash] = useState(location.state?.flash || '');
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -29,10 +30,17 @@ const TripDetail = () => {
     let cancelled = false;
     (async () => {
       try {
-        const response = await axiosInstance.get(`/api/trips/${id}`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        if (!cancelled) setTrip(response.data);
+        const [tripRes, entriesRes] = await Promise.all([
+          axiosInstance.get(`/api/trips/${id}`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }),
+          axiosInstance.get(`/api/trips/${id}/entries`, {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }),
+        ]);
+        if (cancelled) return;
+        setTrip(tripRes.data);
+        setEntries(entriesRes.data || []);
       } catch (err) {
         if (cancelled) return;
         if (err.response?.status === 404) {
@@ -148,8 +156,72 @@ const TripDetail = () => {
             </p>
           )}
 
-          <section className="bg-gray-50 border border-dashed border-gray-300 rounded p-6 text-center text-gray-500">
-            Journal entries coming soon.
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">Journal Entries</h2>
+              {isOwner && (
+                <Link
+                  to={`/trips/${trip._id}/entries/new`}
+                  className="bg-black text-white px-4 py-2 rounded-lg text-sm"
+                >
+                  + Add Entry
+                </Link>
+              )}
+            </div>
+
+            {entries.length === 0 ? (
+              <div className="bg-gray-50 border border-dashed border-gray-300 rounded-lg p-10 text-center">
+                <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-2xl">
+                  📷
+                </div>
+                <h3 className="text-lg font-bold mb-1">No entries yet</h3>
+                <p className="text-gray-600 mb-4">
+                  Add your first journal entry to capture the moment.
+                </p>
+                {isOwner && (
+                  <Link
+                    to={`/trips/${trip._id}/entries/new`}
+                    className="inline-block bg-black text-white px-5 py-2 rounded-lg"
+                  >
+                    + Add first entry
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <ul className="space-y-6">
+                {entries.map((entry) => (
+                  <li
+                    key={entry._id}
+                    className="bg-white shadow rounded-lg overflow-hidden"
+                  >
+                    {entry.photos.length > 0 && (
+                      <div className="grid grid-cols-3 gap-1">
+                        {entry.photos.slice(0, 3).map((url, i) => (
+                          <img
+                            key={url}
+                            src={`${apiBase}${url}`}
+                            alt=""
+                            className="w-full h-32 object-cover"
+                          />
+                        ))}
+                      </div>
+                    )}
+                    <div className="p-4">
+                      <p className="text-sm text-gray-500">
+                        {formatDate(entry.entryDate)}
+                        {entry.photos.length > 3 &&
+                          ` · +${entry.photos.length - 3} more`}
+                      </p>
+                      {entry.caption && (
+                        <p className="text-gray-800 mt-1 whitespace-pre-line">
+                          {entry.caption}
+                        </p>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 

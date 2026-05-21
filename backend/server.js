@@ -15,6 +15,7 @@ app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/trips', require('./routes/tripRoutes'));
+app.use('/api/trips/:tripId/entries', require('./routes/entryRoutes'));
 
 // Export the app object for testing
 if (require.main === module) {

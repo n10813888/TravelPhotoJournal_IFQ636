@@ -15,6 +15,14 @@ const entrySchema = new mongoose.Schema(
       index: true,
     },
     caption: { type: String, default: '' },
+    entryDate: { type: Date, default: () => new Date() },
+    photos: {
+      type: [String],
+      validate: {
+        validator: (v) => Array.isArray(v) && v.length > 0,
+        message: 'At least one photo is required',
+      },
+    },
   },
   { timestamps: true }
 );
