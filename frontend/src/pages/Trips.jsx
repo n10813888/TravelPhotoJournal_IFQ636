@@ -26,6 +26,9 @@ const Trips = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         });
         if (!cancelled) setTrips(response.data || []);
+
+        console.log(response.data);
+
       } catch (err) {
         if (!cancelled) {
           setError(err.response?.data?.message || 'Failed to load trips.');
