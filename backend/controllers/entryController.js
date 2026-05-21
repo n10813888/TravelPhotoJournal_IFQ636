@@ -65,7 +65,7 @@ const getEntriesForTrip = async (req, res) => {
     const trip = await findTripForRead(tripId, req.user?.id);
     if (!trip) return res.status(404).json({ message: 'Trip not found' });
 
-    const entries = await Entry.find({ tripId: trip._id }).sort({ entryDate: -1 });
+    const entries = await Entry.find({ tripId: trip._id }).sort({ entryDate: 1 });
     res.json(entries);
   } catch (error) {
     res.status(500).json({ message: error.message });

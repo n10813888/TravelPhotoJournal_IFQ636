@@ -179,7 +179,7 @@ describe('GET /api/trips/:tripId/entries (integration)', () => {
     return { owner, stranger, privateTrip, publicTrip };
   };
 
-  it('returns the owner\'s entries sorted by entryDate desc', async () => {
+  it('returns the owner\'s entries sorted by entryDate ascending', async () => {
     const { owner, privateTrip } = await seed();
     const res = await chai
       .request(app)
@@ -187,8 +187,8 @@ describe('GET /api/trips/:tripId/entries (integration)', () => {
       .set('Authorization', `Bearer ${tokenFor(owner._id)}`);
     expect(res).to.have.status(200);
     expect(res.body).to.have.length(2);
-    expect(res.body[0].caption).to.equal('newer');
-    expect(res.body[1].caption).to.equal('older');
+    expect(res.body[0].caption).to.equal('older');
+    expect(res.body[1].caption).to.equal('newer');
   });
 
   it('returns entries for a public trip to a non-owner', async () => {

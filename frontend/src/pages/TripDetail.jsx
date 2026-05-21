@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance, { apiBase } from '../axiosConfig';
 import ConfirmDialog from '../components/ConfirmDialog';
+import EntryCard from '../components/EntryCard';
 
 const formatDate = (iso) => {
   if (!iso) return null;
@@ -190,35 +191,7 @@ const TripDetail = () => {
             ) : (
               <ul className="space-y-6">
                 {entries.map((entry) => (
-                  <li
-                    key={entry._id}
-                    className="bg-white shadow rounded-lg overflow-hidden"
-                  >
-                    {entry.photos.length > 0 && (
-                      <div className="grid grid-cols-3 gap-1">
-                        {entry.photos.slice(0, 3).map((url, i) => (
-                          <img
-                            key={url}
-                            src={`${apiBase}${url}`}
-                            alt=""
-                            className="w-full h-32 object-cover"
-                          />
-                        ))}
-                      </div>
-                    )}
-                    <div className="p-4">
-                      <p className="text-sm text-gray-500">
-                        {formatDate(entry.entryDate)}
-                        {entry.photos.length > 3 &&
-                          ` · +${entry.photos.length - 3} more`}
-                      </p>
-                      {entry.caption && (
-                        <p className="text-gray-800 mt-1 whitespace-pre-line">
-                          {entry.caption}
-                        </p>
-                      )}
-                    </div>
-                  </li>
+                  <EntryCard key={entry._id} entry={entry} />
                 ))}
               </ul>
             )}
