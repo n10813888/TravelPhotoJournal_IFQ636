@@ -1,29 +1,43 @@
-name: CI Pipeline
+name: Backend CI
 
 on:
-    push:
-        branches: [main]
+  push:
+    branches: [main]
 
 jobs:
-    build-and-deploy:
-        runs-on: ubuntu-latest
-        environment: production
+  run-tests:
+    runs-on: self-hosted
+    environment: MONGO_URI
 
-        steps:
-            - name: Checkout code
-              uses: actions/checkout@v4
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-            - name: Setup Node.js
-              uses: actions/setup-node@v4
-              with:
-                node-version: '20'
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
 
-            - name: Install dependencies
-              run: npm i
-              working-directory: ./backend
+      - name: Print Env Secret
+        run: echo "${{ secrets.PROD }}" > ./backend/.env
 
-            - name: Run tests
-              run: npm test
-              working-directory: ./backend
+      - name: Run pm2 stop all
+        run: pm2 stop all || true
 
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: yarn install
 
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: yarn install
+
+      - name: Run Backend Tests
+        working-directory: ./backend
+        run: yarn test || npm test
+
+      - name: Run pm2 start all
+        run: pm2 start all
+
+      - name: Run pm2 restart all
+        run: pm2 restart all
