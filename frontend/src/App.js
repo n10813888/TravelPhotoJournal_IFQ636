@@ -8,6 +8,7 @@ import TripDetail from './pages/TripDetail';
 import Trips from './pages/Trips';
 import EditTrip from './pages/EditTrip';
 import NewEntry from './pages/NewEntry';
+import EditEntry from './pages/EditEntry';
 
 function App() {
   return (
@@ -22,6 +23,10 @@ function App() {
         <Route path="/trips/:id" element={<TripDetail />} />
         <Route path="/trips/:id/edit" element={<EditTrip />} />
         <Route path="/trips/:id/entries/new" element={<NewEntry />} />
+        <Route
+          path="/trips/:id/entries/:entryId/edit"
+          element={<EditEntry />}
+        />
       </Routes>
     </Router>
   );

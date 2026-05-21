@@ -59,6 +59,85 @@ const createEntry = async (req, res) => {
   }
 };
 
+const findOwnedEntry = async (tripId, entryId, userId) => {
+  if (
+    !mongoose.Types.ObjectId.isValid(tripId) ||
+    !mongoose.Types.ObjectId.isValid(entryId)
+  ) {
+    return null;
+  }
+  const trip = await Trip.findById(tripId);
+  if (!trip || String(trip.userId) !== String(userId)) return null;
+  const entry = await Entry.findOne({ _id: entryId, tripId: trip._id });
+  return entry;
+};
+
+const parseRemoveList = (raw) => {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw;
+  try {
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const updateEntry = async (req, res) => {
+  const { tripId, entryId } = req.params;
+  const files = req.files || [];
+
+  try {
+    const entry = await findOwnedEntry(tripId, entryId, req.user.id);
+    if (!entry) {
+      cleanupFiles(files);
+      return res.status(404).json({ message: 'Entry not found' });
+    }
+
+    const removeList = parseRemoveList(req.body.removePhotos);
+    const remainingPhotos = entry.photos.filter((p) => !removeList.includes(p));
+    const newPhotos = files.map((f) => publicUrlFor(f.filename));
+    const nextPhotos = [...remainingPhotos, ...newPhotos];
+
+    if (nextPhotos.length === 0) {
+      cleanupFiles(files);
+      return res
+        .status(400)
+        .json({ message: 'At least one photo is required' });
+    }
+
+    if (req.body.caption !== undefined) entry.caption = req.body.caption;
+    if (req.body.entryDate) entry.entryDate = new Date(req.body.entryDate);
+    entry.photos = nextPhotos;
+
+    const updated = await entry.save();
+    removeList.forEach((url) => removePhoto(url));
+    res.json(updated);
+  } catch (error) {
+    cleanupFiles(files);
+    if (error.name === 'ValidationError') {
+      return res.status(400).json({ message: error.message });
+    }
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteEntry = async (req, res) => {
+  const { tripId, entryId } = req.params;
+  try {
+    const entry = await findOwnedEntry(tripId, entryId, req.user.id);
+    if (!entry) return res.status(404).json({ message: 'Entry not found' });
+
+    const photos = [...entry.photos];
+    await entry.deleteOne();
+    photos.forEach((url) => removePhoto(url));
+
+    res.json({ message: 'Entry deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 const getEntriesForTrip = async (req, res) => {
   const { tripId } = req.params;
   try {
@@ -72,4 +151,9 @@ const getEntriesForTrip = async (req, res) => {
   }
 };
 
-module.exports = { createEntry, getEntriesForTrip };
+module.exports = {
+  createEntry,
+  getEntriesForTrip,
+  updateEntry,
+  deleteEntry,
+};

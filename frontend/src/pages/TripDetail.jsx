@@ -25,6 +25,8 @@ const TripDetail = () => {
   const [flash, setFlash] = useState(location.state?.flash || '');
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [entryToDelete, setEntryToDelete] = useState(null);
+  const [deletingEntry, setDeletingEntry] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -74,6 +76,24 @@ const TripDetail = () => {
       setConfirmOpen(false);
     } finally {
       setDeleting(false);
+    }
+  };
+
+  const handleDeleteEntry = async () => {
+    if (!entryToDelete) return;
+    setDeletingEntry(true);
+    try {
+      await axiosInstance.delete(
+        `/api/trips/${id}/entries/${entryToDelete._id}`,
+        { headers: { Authorization: `Bearer ${user.token}` } }
+      );
+      setEntries((prev) => prev.filter((e) => e._id !== entryToDelete._id));
+      setFlash('Entry deleted.');
+      setEntryToDelete(null);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to delete entry.');
+    } finally {
+      setDeletingEntry(false);
     }
   };
 
@@ -191,7 +211,13 @@ const TripDetail = () => {
             ) : (
               <ul className="space-y-6">
                 {entries.map((entry) => (
-                  <EntryCard key={entry._id} entry={entry} />
+                  <EntryCard
+                    key={entry._id}
+                    entry={entry}
+                    tripId={trip._id}
+                    isOwner={isOwner}
+                    onDelete={setEntryToDelete}
+                  />
                 ))}
               </ul>
             )}
@@ -228,6 +254,16 @@ const TripDetail = () => {
         busy={deleting}
         onConfirm={handleDelete}
         onCancel={() => setConfirmOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={!!entryToDelete}
+        title="Delete entry?"
+        message="This will permanently delete the entry and all its photos."
+        confirmLabel="Delete"
+        busy={deletingEntry}
+        onConfirm={handleDeleteEntry}
+        onCancel={() => setEntryToDelete(null)}
       />
     </div>
   );
