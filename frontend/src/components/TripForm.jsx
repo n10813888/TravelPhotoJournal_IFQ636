@@ -176,7 +176,7 @@ const TripForm = ({
         <button
           type="submit"
           disabled={submitting}
-          className="w-full bg-blue-600 text-white p-2 rounded disabled:opacity-50"
+          className="w-full bg-black text-white p-2 rounded-lg disabled:opacity-50"
         >
           {submitting ? submittingLabel : submitLabel}
         </button>

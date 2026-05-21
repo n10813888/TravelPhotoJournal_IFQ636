@@ -20,7 +20,7 @@ const dateRange = (start, end) => {
 const TripCard = ({ trip }) => (
   <Link
     to={`/trips/${trip._id}`}
-    className="block bg-white shadow rounded overflow-hidden hover:shadow-md transition"
+    className="block bg-white shadow rounded-lg overflow-hidden hover:shadow-md transition"
   >
     {trip.coverPhoto ? (
       <img
@@ -34,10 +34,10 @@ const TripCard = ({ trip }) => (
       </div>
     )}
     <div className="p-4">
-      <h2 className="text-lg font-semibold truncate">{trip.title}</h2>
-      <p className="text-gray-600 truncate">{trip.destination}</p>
+      <h2 className="text-lg font-semibold truncate text-black">{trip.title}</h2>
+      <p className="text-gray-600 truncate">📍 {trip.destination}</p>
       <p className="text-sm text-gray-500 mt-1">
-        {dateRange(trip.startDate, trip.endDate)}
+        📅 {dateRange(trip.startDate, trip.endDate)}
       </p>
     </div>
   </Link>

@@ -80,7 +80,7 @@ const TripDetail = () => {
     return (
       <div className="max-w-2xl mx-auto mt-10 p-6">
         <p className="text-red-600">{error}</p>
-        <Link to="/trips" className="text-blue-600 mt-4 inline-block">
+        <Link to="/trips" className="text-black underline mt-4 inline-block">
           ← Back to trips
         </Link>
       </div>
@@ -102,7 +102,7 @@ const TripDetail = () => {
 
   return (
     <div className="max-w-5xl mx-auto mt-6 p-4 sm:p-6">
-      <Link to="/trips" className="text-blue-600 inline-block mb-4">
+      <Link to="/trips" className="text-gray-700 hover:text-black inline-block mb-4">
         ← Back to trips
       </Link>
 
@@ -159,14 +159,14 @@ const TripDetail = () => {
               <h2 className="font-semibold">Actions</h2>
               <Link
                 to={`/trips/${trip._id}/edit`}
-                className="block w-full text-center bg-blue-600 text-white px-4 py-2 rounded"
+                className="block w-full text-center bg-black text-white px-4 py-2 rounded-lg"
               >
                 Edit Trip
               </Link>
               <button
                 type="button"
                 onClick={() => setConfirmOpen(true)}
-                className="block w-full bg-red-600 text-white px-4 py-2 rounded"
+                className="block w-full bg-red-600 text-white px-4 py-2 rounded-lg"
               >
                 Delete Trip
               </button>

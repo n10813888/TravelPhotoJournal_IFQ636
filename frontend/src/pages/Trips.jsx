@@ -64,15 +64,18 @@ const Trips = () => {
   if (trips.length === 0) {
     return (
       <div className="max-w-2xl mx-auto mt-16 p-6 text-center">
+        <div className="w-24 h-24 mx-auto mb-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 text-3xl">
+          🗺
+        </div>
         <h1 className="text-2xl font-bold mb-2">No trips yet</h1>
         <p className="text-gray-600 mb-6">
-          Start your travel journal by creating your first trip.
+          Start documenting your adventures — your photos and memories all in one place.
         </p>
         <Link
           to="/trips/new"
-          className="inline-block bg-blue-600 text-white px-5 py-2 rounded"
+          className="inline-block bg-black text-white px-5 py-2 rounded-lg"
         >
-          Create your first trip
+          + Create your first trip
         </Link>
       </div>
     );
@@ -92,9 +95,9 @@ const Trips = () => {
         <h1 className="text-2xl font-bold">My Trips</h1>
         <Link
           to="/trips/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded"
+          className="bg-black text-white px-4 py-2 rounded-lg"
         >
-          New Trip
+          + New Trip
         </Link>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
