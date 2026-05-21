@@ -15,7 +15,7 @@ const Login = () => {
     try {
       const response = await axiosInstance.post('/api/auth/login', formData);
       login(response.data);
-      navigate('/trips');
+      navigate(response.data.role === 'admin' ? '/admin' : '/trips');
     } catch (error) {
       showAlert(
         error.response?.data?.message || 'Login failed. Please try again.',

@@ -10,6 +10,8 @@ import EditTrip from './pages/EditTrip';
 import NewEntry from './pages/NewEntry';
 import EditEntry from './pages/EditEntry';
 import PublicFeed from './pages/PublicFeed';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminRoute from './components/AdminRoute';
 
 function App() {
   return (
@@ -17,6 +19,14 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/feed" element={<PublicFeed />} />
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute>
+              <AdminDashboard />
+            </AdminRoute>
+          }
+        />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
