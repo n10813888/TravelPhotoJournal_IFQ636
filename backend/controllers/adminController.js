@@ -85,4 +85,94 @@ const deleteUser = async (req, res) => {
   }
 };
 
-module.exports = { getStats, listUsers, deactivateUser, deleteUser };
+const listAllTrips = async (_req, res) => {
+  try {
+    const trips = await Trip.find()
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name');
+    const formatted = trips.map((t) => {
+      const obj = t.toObject();
+      obj.ownerName = obj.userId?.name || null;
+      obj.userId = obj.userId?._id || obj.userId;
+      return obj;
+    });
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const listAllEntries = async (_req, res) => {
+  try {
+    const entries = await Entry.find()
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name')
+      .populate('tripId', 'title');
+    const formatted = entries.map((e) => {
+      const obj = e.toObject();
+      obj.ownerName = obj.userId?.name || null;
+      obj.userId = obj.userId?._id || obj.userId;
+      obj.tripTitle = obj.tripId?.title || null;
+      obj.tripId = obj.tripId?._id || obj.tripId;
+      return obj;
+    });
+    res.json(formatted);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteTripAsAdmin = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Trip not found' });
+  }
+  try {
+    const trip = await Trip.findById(id);
+    if (!trip) return res.status(404).json({ message: 'Trip not found' });
+
+    const entries = await Entry.find({ tripId: trip._id });
+    const photos = [
+      ...(trip.coverPhoto ? [trip.coverPhoto] : []),
+      ...entries.flatMap((e) => e.photos),
+    ];
+
+    await Entry.deleteMany({ tripId: trip._id });
+    await trip.deleteOne();
+    photos.forEach((url) => removePhoto(url));
+
+    res.json({ message: 'Trip deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const deleteEntryAsAdmin = async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    return res.status(404).json({ message: 'Entry not found' });
+  }
+  try {
+    const entry = await Entry.findById(id);
+    if (!entry) return res.status(404).json({ message: 'Entry not found' });
+
+    const photos = [...entry.photos];
+    await entry.deleteOne();
+    photos.forEach((url) => removePhoto(url));
+
+    res.json({ message: 'Entry deleted' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  getStats,
+  listUsers,
+  deactivateUser,
+  deleteUser,
+  listAllTrips,
+  listAllEntries,
+  deleteTripAsAdmin,
+  deleteEntryAsAdmin,
+};

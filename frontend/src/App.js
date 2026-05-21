@@ -12,6 +12,7 @@ import EditEntry from './pages/EditEntry';
 import PublicFeed from './pages/PublicFeed';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminUsers from './pages/AdminUsers';
+import AdminModeration from './pages/AdminModeration';
 import AdminLayout from './components/AdminLayout';
 import AdminRoute from './components/AdminRoute';
 
@@ -37,6 +38,16 @@ function App() {
             <AdminRoute>
               <AdminLayout>
                 <AdminUsers />
+              </AdminLayout>
+            </AdminRoute>
+          }
+        />
+        <Route
+          path="/admin/moderation"
+          element={
+            <AdminRoute>
+              <AdminLayout>
+                <AdminModeration />
               </AdminLayout>
             </AdminRoute>
           }

@@ -295,6 +295,165 @@ describe('DELETE /api/admin/users/:id (integration)', () => {
   });
 });
 
+describe('Admin moderation: trips (integration)', () => {
+  before(async () => {
+    await connect();
+  });
+  after(async () => {
+    await disconnect();
+  });
+  beforeEach(async () => {
+    await clearDb();
+  });
+
+  const seed = async () => {
+    const admin = await User.create({
+      name: 'A',
+      email: 'admin@test.com',
+      password: 'pass1234',
+      role: 'admin',
+    });
+    const owner = await User.create({
+      name: 'Bob',
+      email: 'bob@test.com',
+      password: 'pass1234',
+    });
+    const trip = await Trip.create({
+      userId: owner._id,
+      title: 'Trip',
+      destination: 'Paris',
+      startDate: new Date('2026-06-01'),
+      isPublic: true,
+    });
+    await Entry.create({
+      tripId: trip._id,
+      userId: owner._id,
+      photos: ['/uploads/a.jpg'],
+    });
+    return { admin, owner, trip };
+  };
+
+  it('GET /trips returns all trips with owner name', async () => {
+    const { admin } = await seed();
+    const res = await chai
+      .request(app)
+      .get('/api/admin/trips')
+      .set('Authorization', `Bearer ${tokenFor(admin._id)}`);
+    expect(res).to.have.status(200);
+    expect(res.body).to.have.length(1);
+    expect(res.body[0].ownerName).to.equal('Bob');
+  });
+
+  it('DELETE /trips/:id removes trip and cascades entries', async () => {
+    const { admin, trip } = await seed();
+    const res = await chai
+      .request(app)
+      .delete(`/api/admin/trips/${trip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(admin._id)}`);
+    expect(res).to.have.status(200);
+    expect(await Trip.findById(trip._id)).to.equal(null);
+    expect(await Entry.find({ tripId: trip._id })).to.have.length(0);
+  });
+
+  it('DELETE /trips/:id returns 403 to non-admins', async () => {
+    const { trip } = await seed();
+    const nonAdmin = await User.create({
+      name: 'N',
+      email: 'n@test.com',
+      password: 'pass1234',
+    });
+    const res = await chai
+      .request(app)
+      .delete(`/api/admin/trips/${trip._id}`)
+      .set('Authorization', `Bearer ${tokenFor(nonAdmin._id)}`);
+    expect(res).to.have.status(403);
+  });
+
+  it('DELETE /trips/:id returns 404 for invalid id', async () => {
+    const { admin } = await seed();
+    const res = await chai
+      .request(app)
+      .delete('/api/admin/trips/not-an-id')
+      .set('Authorization', `Bearer ${tokenFor(admin._id)}`);
+    expect(res).to.have.status(404);
+  });
+});
+
+describe('Admin moderation: entries (integration)', () => {
+  before(async () => {
+    await connect();
+  });
+  after(async () => {
+    await disconnect();
+  });
+  beforeEach(async () => {
+    await clearDb();
+  });
+
+  const seed = async () => {
+    const admin = await User.create({
+      name: 'A',
+      email: 'admin@test.com',
+      password: 'pass1234',
+      role: 'admin',
+    });
+    const owner = await User.create({
+      name: 'Bob',
+      email: 'bob@test.com',
+      password: 'pass1234',
+    });
+    const trip = await Trip.create({
+      userId: owner._id,
+      title: 'My Trip',
+      destination: 'Paris',
+      startDate: new Date('2026-06-01'),
+    });
+    const entry = await Entry.create({
+      tripId: trip._id,
+      userId: owner._id,
+      caption: 'A day',
+      photos: ['/uploads/a.jpg'],
+    });
+    return { admin, owner, trip, entry };
+  };
+
+  it('GET /entries returns all entries with trip title + owner', async () => {
+    const { admin } = await seed();
+    const res = await chai
+      .request(app)
+      .get('/api/admin/entries')
+      .set('Authorization', `Bearer ${tokenFor(admin._id)}`);
+    expect(res).to.have.status(200);
+    expect(res.body).to.have.length(1);
+    expect(res.body[0].ownerName).to.equal('Bob');
+    expect(res.body[0].tripTitle).to.equal('My Trip');
+  });
+
+  it('DELETE /entries/:id removes the entry', async () => {
+    const { admin, entry } = await seed();
+    const res = await chai
+      .request(app)
+      .delete(`/api/admin/entries/${entry._id}`)
+      .set('Authorization', `Bearer ${tokenFor(admin._id)}`);
+    expect(res).to.have.status(200);
+    expect(await Entry.findById(entry._id)).to.equal(null);
+  });
+
+  it('DELETE /entries/:id returns 403 to non-admins', async () => {
+    const { entry } = await seed();
+    const nonAdmin = await User.create({
+      name: 'N',
+      email: 'n@test.com',
+      password: 'pass1234',
+    });
+    const res = await chai
+      .request(app)
+      .delete(`/api/admin/entries/${entry._id}`)
+      .set('Authorization', `Bearer ${tokenFor(nonAdmin._id)}`);
+    expect(res).to.have.status(403);
+  });
+});
+
 describe('Auth responses include role', () => {
   before(async () => {
     await connect();
